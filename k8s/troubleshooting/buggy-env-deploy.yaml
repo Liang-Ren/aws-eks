@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: buggy-env
+  namespace: liang-eks
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: buggy-env
+  template:
+    metadata:
+      labels:
+        app: buggy-env
+    spec:
+      containers:
+        - name: app
+          image: python:3.11-slim
+          command: ["sh", "-c"]
+          # Intentionally fail when MISS_VAR is not set
+          args: ["echo value is: $MISS_VAR; if [ -z \"$MISS_VAR\" ]; then echo 'FATAL: MISS_VAR not set'; exit 1; fi; sleep 300"]

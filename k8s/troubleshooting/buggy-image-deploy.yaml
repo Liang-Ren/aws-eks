@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: buggy-image
+  namespace: liang-eks
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: buggy-image
+  template:
+    metadata:
+      labels:
+        app: buggy-image
+    spec:
+      containers:
+        - name: app
+          # Intentionally incorrect tag to trigger ImagePullBackOff
+          image: nginx:not-exist-tag
+          ports:
+            - containerPort: 80

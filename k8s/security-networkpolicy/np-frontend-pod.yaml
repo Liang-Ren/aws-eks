@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: np-frontend
+  namespace: dev
+  labels:
+    app: frontend
+    role: frontend
+spec:
+  containers:
+    - name: curl
+      image: curlimages/curl:8.00.1
+      command: ["sh", "-c"]
+      args: ["sleep 3600"]
+  restartPolicy: Never
