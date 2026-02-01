@@ -15,4 +15,4 @@ spec:
       containers:
         - name: hostinfo
           image: busybox:1.36
-          command: ["sh", "-c", "while true; do echo $(date) $(hostname); sleep 10; done"]
+          command: ["sh", "-c", "while true; do echo 'FROM GIT:' $(date) $(hostname); sleep 10; done"]
