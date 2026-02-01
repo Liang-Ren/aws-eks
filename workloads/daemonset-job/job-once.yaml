@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: echo-once
+  namespace: ds-lab
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: worker
+          image: busybox:1.36
+          command: ["sh", "-c", "echo 'Job run at: ' $(date); sleep 5"]
+  backoffLimit: 1
