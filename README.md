@@ -1,12 +1,13 @@
 # AWS EKS with Terraform
 
-This project codifies an `EKS` where we creates:
+This project codifies an `EKS` lab where we create:
 - A dedicated `VPC` with public and private `subnets`
 - An `EKS` cluster with a single managed `nodegroup`
 - An `ECR repository` for your Flask/FastAPI demo image
 - An S3 bucket that you can use in `IRSA` (IAM Roles for Service Accounts) 
-- A troubleshooting scenarios via `kubectl logs/events/describe` 
-- A case of `securitycontext` and `NetworkPolicy` 
+- Troubleshooting scenarios via `kubectl logs/events/describe` 
+- A case of `securityContext` and `NetworkPolicy` 
+- (Optional) GitOps experiments with FluxCD, using this repo as the Git source
 
 ---
 
@@ -169,6 +170,72 @@ You can also use this cluster to validate basic pod security settings and networ
 Apply them into namespaces such as `dev` or `liang-eks` and then:
 - Verify pods run as non-root and with restricted capabilities.
 - Confirm that backend traffic is denied by default and only allowed from pods with the correct labels.
+
+---
+
+## Optional: GitOps with FluxCD
+
+You can reuse this repository as a Git source for FluxCD and practice GitOps workflows:
+
+1. **Prepare Git directories**
+
+   In this repo, you can organize manifests for GitOps under paths such as:
+
+   - `workloads/daemonset-job/` – DaemonSet, Job, and CronJob examples.
+   - `workloads/storage/` – PVC + Pod manifests for storage labs.
+   - `clusters/lab-eks/` – (optional) cluster-level configuration for your `lab-eks` cluster.
+
+2. **Create a GitRepository source in the cluster**
+
+   ```bash
+   flux create source git aws-eks-src \
+     --url=https://github.com/Liang-Ren/aws-eks \
+     --branch=main \
+     --interval=30s
+
+   flux get sources git
+   ```
+
+3. **Create Kustomizations that point to specific folders**
+
+   For example, to have Flux apply DaemonSet/Job/CronJob manifests into a namespace `ds-lab`:
+
+   ```bash
+   kubectl create namespace ds-lab
+
+   flux create kustomization daemonset-job-ks \
+     --target-namespace=ds-lab \
+     --source=GitRepository/aws-eks-src \
+     --path="./workloads/daemonset-job" \
+     --prune=true \
+     --interval=1m
+
+   flux get kustomizations
+   ```
+
+   And for storage examples in namespace `storage-lab`:
+
+   ```bash
+   kubectl create namespace storage-lab
+
+   flux create kustomization storage-ks \
+     --target-namespace=storage-lab \
+     --source=GitRepository/aws-eks-src \
+     --path="./workloads/storage" \
+     --prune=true \
+     --interval=1m
+   ```
+
+4. **Change manifests in Git and watch Flux reconcile**
+
+   After you edit manifests under `workloads/` and push to GitHub, Flux will automatically reconcile:
+
+   ```bash
+   flux reconcile kustomization daemonset-job-ks --with-source
+   flux reconcile kustomization storage-ks --with-source
+   ```
+
+   This lets you practice the full GitOps loop: **edit YAML in Git → push → Flux syncs changes into the EKS cluster**.
 
 ---
 
